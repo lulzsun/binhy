@@ -6,11 +6,19 @@ import (
 	"io"
 	"log"
 	"net/http"
+	"os"
 	"text/template"
+
+	"github.com/joho/godotenv"
 )
 
 func main() {
-	url := "http://192.168.1.154:32400/library/sections/1/all?X-Plex-Token=jdJx7C5mm6AEqadrtByG"
+	err := godotenv.Load(".env")
+	if err != nil {
+		log.Fatalf("Error loading .env file: %s", err)
+	}
+	plexToken := os.Getenv("PLEX_TOKEN")
+	plexUrl := os.Getenv("PLEX_SERVER_URL")
 
 	http.HandleFunc("/play", func(w http.ResponseWriter, r *http.Request) {
 		log.Printf("gyat")
@@ -20,7 +28,7 @@ func main() {
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		tmpl := template.Must(template.ParseFiles("web/templates/index.html"))
 
-		response, err := http.Get(url)
+		response, err := http.Get(plexUrl + "/library/sections/1/all?X-Plex-Token=" + plexToken)
 		if err != nil {
 			log.Printf("Error making GET request: %s\n", err)
 			return
