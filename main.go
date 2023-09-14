@@ -89,6 +89,6 @@ func main() {
 		http.FileServer(http.Dir("web/static")).ServeHTTP(w, r)
 	})))
 
-	log.Println("hello, whirled! http://localhost:420/")
+	log.Println("hello, whirled! http://localhost:42069/")
 	log.Fatal(http.ListenAndServe(":420", nil))
 }
