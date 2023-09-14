@@ -7,6 +7,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"os/exec"
 	"text/template"
 
 	"github.com/joho/godotenv"
@@ -21,7 +22,17 @@ func main() {
 	plexUrl := os.Getenv("PLEX_SERVER_URL")
 
 	http.HandleFunc("/play", func(w http.ResponseWriter, r *http.Request) {
-		log.Printf("gyat")
+		playUrl := plexUrl + "/library/parts/215/1662245734/file.mp4?&X-Plex-Token=" + plexToken
+		cmd := exec.Command("cvlc", playUrl)
+		cmd.Stdout = os.Stdout
+		cmd.Stderr = os.Stderr
+
+		err := cmd.Run()
+		if err != nil {
+			log.Printf("Error playing video %s: %v\n", playUrl, err)
+			w.WriteHeader(400)
+			return
+		}
 		w.WriteHeader(200)
 	})
 
