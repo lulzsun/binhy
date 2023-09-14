@@ -22,7 +22,7 @@ func main() {
 	plexUrl := os.Getenv("PLEX_SERVER_URL")
 
 	http.HandleFunc("/play", func(w http.ResponseWriter, r *http.Request) {
-		playUrl := plexUrl + "/library/parts/215/1662245734/file.mp4?&X-Plex-Token=" + plexToken
+		playUrl := plexUrl + "/library/parts/215/1662245734/file.mp4?X-Plex-Token=" + plexToken
 		cmd := exec.Command("cvlc", playUrl)
 		cmd.Stdout = os.Stdout
 		cmd.Stderr = os.Stderr
