@@ -17,7 +17,7 @@ $ npm run dev
 ### production
 ```bash
 $ npm run build
-$ npm run start
+$ nohup go run main.go &
 ```
 
 ## endnotes

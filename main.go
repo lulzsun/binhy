@@ -5,12 +5,20 @@ import (
 	"encoding/xml"
 	"io"
 	"log"
+	"net"
 	"net/http"
 	"os"
 	"os/exec"
+	"sync"
+	"syscall"
 	"text/template"
 
 	"github.com/joho/godotenv"
+)
+
+var (
+	videoPlayingMutex sync.Mutex
+	currentCmd        *exec.Cmd
 )
 
 func main() {
@@ -22,18 +30,48 @@ func main() {
 	plexUrl := os.Getenv("PLEX_SERVER_URL")
 
 	http.HandleFunc("/play", func(w http.ResponseWriter, r *http.Request) {
-		playUrl := plexUrl + "/library/parts/215/1662245734/file.mp4?X-Plex-Token=" + plexToken
-		cmd := exec.Command("cvlc", playUrl)
+		videoPlayingMutex.Lock()
+		defer videoPlayingMutex.Unlock()
+
+		// If a video is already playing, kill the current process and wait for it to exit
+		if currentCmd != nil && currentCmd.Process != nil {
+			if err := currentCmd.Process.Signal(syscall.SIGTERM); err != nil {
+				http.Error(w, "Failed to terminate the existing video player", http.StatusInternalServerError)
+				log.Printf("Error terminating existing video player: %v\n", err)
+				return
+			}
+
+			if err := currentCmd.Wait(); err != nil {
+				log.Printf("Error waiting for process to exit: %v\n", err)
+			}
+
+			log.Println("Terminated the existing video player.")
+		}
+
+		// Parse the "file" query parameter from the URL
+		file := r.URL.Query().Get("file")
+
+		if file == "" {
+			http.Error(w, "Missing 'file' parameter", http.StatusBadRequest)
+			return
+		}
+
+		playUrl := plexUrl + file + "?X-Plex-Token=" + plexToken
+		cmd := exec.Command("cvlc", "--play-and-exit", playUrl)
 		cmd.Stdout = os.Stdout
 		cmd.Stderr = os.Stderr
 
-		err := cmd.Run()
-		if err != nil {
-			log.Printf("Error playing video %s: %v\n", playUrl, err)
-			w.WriteHeader(400)
+		if err := cmd.Start(); err != nil {
+			http.Error(w, "Failed to start video player", http.StatusInternalServerError)
+			log.Printf("Error starting video player: %v\n", err)
 			return
 		}
-		w.WriteHeader(200)
+
+		currentCmd = cmd
+
+		log.Printf("Started playing %s\n", file)
+		w.WriteHeader(http.StatusOK)
+		w.Write([]byte("Started playing " + file))
 	})
 
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
@@ -67,7 +105,7 @@ func main() {
 		for _, video := range result.Videos {
 			switch video.ContentRating {
 			case "PG", "G":
-				if video.Media.VideoCodec == "hevc" {
+				if video.Media.VideoCodec == "hevc" || video.Media.Container != "mp4" {
 					log.Printf("%s", video.Title)
 					continue
 				}
@@ -89,6 +127,14 @@ func main() {
 		http.FileServer(http.Dir("web/static")).ServeHTTP(w, r)
 	})))
 
-	log.Println("hello, whirled! http://localhost:42069/")
+	conn, err := net.Dial("udp", "8.8.8.8:80")
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer conn.Close()
+
+	localAddr := conn.LocalAddr().(*net.UDPAddr)
+
+	log.Printf("binhy online on at %s:42069", localAddr.IP)
 	log.Fatal(http.ListenAndServe(":42069", nil))
 }
