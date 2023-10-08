@@ -7,11 +7,19 @@
     <script src="/static/htmx.min.js"></script>
     <title>Document</title>
 </head>
-<body>
-    <div class="columns-4">
-        {{ range .Movies }}
-            <img class="rounded-xl cursor-pointer" hx-post="/play?file={{ .File }}" src="{{ .Thumb }}"/>
-        {{ end }}
-    </div>
+<body class="flex flex-col h-screen items-center">
+    <header class="flex-initial">
+        <b>header</b>
+    </header>
+    <main class="px-3 overflow-y-auto w-full h-full">
+        <div class="grid grid-cols-4 gap-3 h-screen">
+            {{ range .Movies }}
+                <img class="rounded-xl cursor-pointer" hx-post="/play?file={{ .File }}" src="{{ .Thumb }}"/>
+            {{ end }}
+        </div>
+    </main>
+    <footer class="flex-initial">
+        <b>footer</b>
+    </footer>
 </body>
 </html> 
