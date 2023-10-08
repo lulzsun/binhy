@@ -3,10 +3,10 @@
 VERSION=1.20
 
 ## Download the latest version of Golang
-wget https://dl.google.com/go/go$VERSION.linux-armv6l.tar.gz
+wget https://dl.google.com/go/go$VERSION.linux-armv7l.tar.gz
 
 ## Extract the archive
-tar -C /usr/local -xzf go$VERSION.linux-armv6l.tar.gz
+tar -C /usr/local -xzf go$VERSION.linux-armv7l.tar.gz
 
 ## Set the environment variable for Golang
 echo 'export GOROOT=/usr/local/go' >> ~/.bashrc
@@ -18,4 +18,4 @@ source ~/.bashrc
 go version
 
 ## Clean up
-rm go$VERSION.linux-armv6l.tar.gz
+rm go$VERSION.linux-armv7l.tar.gz

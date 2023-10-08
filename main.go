@@ -57,7 +57,7 @@ func main() {
 		}
 
 		playUrl := plexUrl + file + "?X-Plex-Token=" + plexToken
-		cmd := exec.Command("cvlc", "--alsa-audio-device", "hw:0,0", "--play-and-exit", playUrl)
+		cmd := exec.Command("cvlc", "--play-and-exit", playUrl)
 		cmd.Stdout = os.Stdout
 		cmd.Stderr = os.Stderr
 
