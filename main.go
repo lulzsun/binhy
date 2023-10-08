@@ -105,10 +105,10 @@ func main() {
 		for _, video := range result.Videos {
 			switch video.ContentRating {
 			case "PG", "G":
-				if video.Media.VideoCodec == "hevc" || video.Media.Container != "mp4" {
-					log.Printf("%s", video.Title)
-					continue
-				}
+				// if video.Media.VideoCodec == "hevc" || video.Media.Container != "mp4" {
+				// 	log.Printf("%s", video.Title)
+				// 	continue
+				// }
 				movies["Movies"] = append(movies["Movies"],
 					Movie{
 						Title: video.Title,
