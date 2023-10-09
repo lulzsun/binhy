@@ -3,7 +3,7 @@ Description=My Custom Service
 
 [Service]
 WorkingDirectory=/home/jimmy/binhy
-ExecStart=/bin/sh -c "npx tailwindcss -i ./tailwind.css -o ./web/static/styles.css && go run ."
+ExecStart=/bin/sh -c "npx tailwindcss -i ./tailwind.css -o ./web/static/styles.css && /usr/local/go/bin/go run ."
 Restart=always
 User=jimmy
 
