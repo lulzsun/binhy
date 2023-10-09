@@ -1,0 +1,11 @@
+[Unit]
+Description=My Custom Service
+
+[Service]
+WorkingDirectory=/home/jimmy/binhy
+ExecStart=/bin/sh -c "npx tailwindcss -i ./tailwind.css -o ./web/static/styles.css && go run ."
+Restart=always
+User=jimmy
+
+[Install]
+WantedBy=multi-user.target
