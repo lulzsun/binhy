@@ -5,6 +5,7 @@ import (
 	"encoding/xml"
 	"io"
 	"log"
+	"math/rand"
 	"net"
 	"net/http"
 	"os"
@@ -12,13 +13,19 @@ import (
 	"sync"
 	"syscall"
 	"text/template"
+	"time"
 
 	"github.com/joho/godotenv"
 )
 
+type VlcProcess struct {
+	FileName string
+	Cmd      *exec.Cmd
+}
+
 var (
 	videoPlayingMutex sync.Mutex
-	currentCmd        *exec.Cmd
+	currentVideo      VlcProcess
 )
 
 func main() {
@@ -29,22 +36,55 @@ func main() {
 	plexToken := os.Getenv("PLEX_TOKEN")
 	plexUrl := os.Getenv("PLEX_SERVER_URL")
 
-	http.HandleFunc("/play", func(w http.ResponseWriter, r *http.Request) {
+	http.HandleFunc("/stop", func(w http.ResponseWriter, r *http.Request) {
 		videoPlayingMutex.Lock()
 		defer videoPlayingMutex.Unlock()
 
+		if currentVideo.Cmd == nil {
+			log.Printf("No video currently playing\n")
+			w.WriteHeader(http.StatusOK)
+			w.Write([]byte("No video currently playing"))
+			return
+		}
+
 		// If a video is already playing, kill the current process and wait for it to exit
-		if currentCmd != nil && currentCmd.Process != nil {
-			if err := currentCmd.Process.Signal(syscall.SIGTERM); err != nil {
+		if currentVideo.Cmd != nil && currentVideo.Cmd.Process != nil {
+			if err := currentVideo.Cmd.Process.Signal(syscall.SIGTERM); err != nil {
 				http.Error(w, "Failed to terminate the existing video player", http.StatusInternalServerError)
 				log.Printf("Error terminating existing video player: %v\n", err)
 				return
 			}
 
-			if err := currentCmd.Wait(); err != nil {
+			if err := currentVideo.Cmd.Wait(); err != nil {
 				log.Printf("Error waiting for process to exit: %v\n", err)
 			}
 
+			currentVideo.Cmd = nil
+			log.Println("Terminated the existing video player.")
+		}
+
+		log.Printf("Stopped playing %s\n", currentVideo.FileName)
+		w.WriteHeader(http.StatusOK)
+		w.Write([]byte("Stopped playing " + currentVideo.FileName))
+	})
+
+	http.HandleFunc("/play", func(w http.ResponseWriter, r *http.Request) {
+		videoPlayingMutex.Lock()
+		defer videoPlayingMutex.Unlock()
+
+		// If a video is already playing, kill the current process and wait for it to exit
+		if currentVideo.Cmd != nil && currentVideo.Cmd.Process != nil {
+			if err := currentVideo.Cmd.Process.Signal(syscall.SIGTERM); err != nil {
+				http.Error(w, "Failed to terminate the existing video player", http.StatusInternalServerError)
+				log.Printf("Error terminating existing video player: %v\n", err)
+				return
+			}
+
+			if err := currentVideo.Cmd.Wait(); err != nil {
+				log.Printf("Error waiting for process to exit: %v\n", err)
+			}
+
+			currentVideo.Cmd = nil
 			log.Println("Terminated the existing video player.")
 		}
 
@@ -67,7 +107,8 @@ func main() {
 			return
 		}
 
-		currentCmd = cmd
+		currentVideo.FileName = file
+		currentVideo.Cmd = cmd
 
 		log.Printf("Started playing %s\n", file)
 		w.WriteHeader(http.StatusOK)
@@ -118,6 +159,10 @@ func main() {
 				)
 			}
 		}
+		rand.New(rand.NewSource(time.Now().UnixNano())) // Initialize the random number generator with a seed
+		rand.Shuffle(len(movies["Movies"]), func(i, j int) {
+			movies["Movies"][i], movies["Movies"][j] = movies["Movies"][j], movies["Movies"][i]
+		})
 		tmpl.Execute(w, movies)
 	})
 
