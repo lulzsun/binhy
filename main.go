@@ -10,6 +10,7 @@ import (
 	"net/http"
 	"os"
 	"os/exec"
+	"strings"
 	"sync"
 	"syscall"
 	"text/template"
@@ -144,8 +145,9 @@ func main() {
 
 		movies := map[string][]Movie{"Movies": {}}
 		for _, video := range result.Videos {
-			switch video.ContentRating {
-			case "PG", "G":
+			switch {
+			case video.ContentRating == "PG" || video.ContentRating == "G" ||
+				strings.Contains(strings.ToLower(video.Title), strings.ToLower("Paris By Night")):
 				// if video.Media.VideoCodec == "hevc" || video.Media.Container != "mp4" {
 				// 	log.Printf("%s", video.Title)
 				// 	continue
