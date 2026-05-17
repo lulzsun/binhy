@@ -148,7 +148,7 @@ func main() {
 			switch {
 			case (video.ContentRating == "PG" || video.ContentRating == "G" ||
 				strings.Contains(strings.ToLower(video.Title), strings.ToLower("Paris By Night"))) &&
-				!strings.Contains(strings.ToLower(video.GUID), strings.ToLower("local://")):
+				strings.Contains(strings.ToLower(video.GUID), strings.ToLower("plex://movie/")):
 				// if video.Media.VideoCodec == "hevc" || video.Media.Container != "mp4" {
 				// 	log.Printf("%s", video.Title)
 				// 	continue
