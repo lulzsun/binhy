@@ -155,7 +155,7 @@ func main() {
 				movies["Movies"] = append(movies["Movies"],
 					Movie{
 						Title: video.Title,
-						Thumb: "http://192.168.1.154:32400" + video.Thumb + "?X-Plex-Token=jdJx7C5mm6AEqadrtByG",
+						Thumb: "http://192.168.1.154:32400" + video.Thumb + "?X-Plex-Token=" + plexToken,
 						File:  video.Media.Part.Key,
 					},
 				)
