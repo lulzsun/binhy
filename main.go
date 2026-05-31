@@ -27,6 +27,7 @@ type VlcProcess struct {
 var (
 	videoPlayingMutex sync.Mutex
 	currentVideo      VlcProcess
+	currentMovie      Movie
 )
 
 func main() {
@@ -42,6 +43,7 @@ func main() {
 		defer videoPlayingMutex.Unlock()
 
 		if currentVideo.Cmd == nil {
+			currentMovie = Movie{}
 			log.Printf("No video currently playing\n")
 			w.WriteHeader(http.StatusOK)
 			w.Write([]byte("No video currently playing"))
@@ -61,6 +63,7 @@ func main() {
 			}
 
 			currentVideo.Cmd = nil
+			currentMovie = Movie{}
 			log.Println("Terminated the existing video player.")
 		}
 
@@ -89,8 +92,9 @@ func main() {
 			log.Println("Terminated the existing video player.")
 		}
 
-		// Parse the "file" query parameter from the URL
 		file := r.URL.Query().Get("file")
+		title := r.URL.Query().Get("title")
+		thumb := r.URL.Query().Get("thumb")
 
 		if file == "" {
 			http.Error(w, "Missing 'file' parameter", http.StatusBadRequest)
@@ -110,6 +114,11 @@ func main() {
 
 		currentVideo.FileName = file
 		currentVideo.Cmd = cmd
+		currentMovie = Movie{
+			Title: title,
+			Thumb: thumb,
+			File:  file,
+		}
 
 		log.Printf("Started playing %s\n", file)
 		w.WriteHeader(http.StatusOK)
@@ -143,7 +152,7 @@ func main() {
 			return
 		}
 
-		movies := map[string][]Movie{"Movies": {}}
+		var movies []Movie
 		for _, video := range result.Videos {
 			switch {
 			case (video.ContentRating == "PG" || video.ContentRating == "G" ||
@@ -153,25 +162,28 @@ func main() {
 				// 	log.Printf("%s", video.Title)
 				// 	continue
 				// }
-				movies["Movies"] = append(movies["Movies"],
-					Movie{
-						Title: video.Title,
-						Thumb: "http://192.168.1.154:32400" + video.Thumb + "?X-Plex-Token=" + plexToken,
-						File:  video.Media.Part.Key,
-					},
-				)
+				movies = append(movies, Movie{
+					Title: video.Title,
+					Thumb: plexUrl + video.Thumb + "?X-Plex-Token=" + plexToken,
+					File:  video.Media.Part.Key,
+				})
 			}
 		}
-		rand.New(rand.NewSource(time.Now().UnixNano())) // Initialize the random number generator with a seed
-		rand.Shuffle(len(movies["Movies"]), func(i, j int) {
-			movies["Movies"][i], movies["Movies"][j] = movies["Movies"][j], movies["Movies"][i]
+		rand.New(rand.NewSource(time.Now().UnixNano()))
+		rand.Shuffle(len(movies), func(i, j int) {
+			movies[i], movies[j] = movies[j], movies[i]
 		})
 		limit := 12
-		if len(movies["Movies"]) < limit {
-			limit = len(movies["Movies"])
+		if len(movies) < limit {
+			limit = len(movies)
 		}
-		movies["Movies"] = movies["Movies"][:limit]
-		tmpl.Execute(w, movies)
+		movies = movies[:limit]
+
+		html := map[string]any{
+			"Movies":       movies,
+			"CurrentMovie": currentMovie,
+		}
+		tmpl.Execute(w, html)
 	})
 
 	http.Handle("/static/", http.StripPrefix("/static/", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
