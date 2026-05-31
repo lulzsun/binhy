@@ -52,6 +52,38 @@ Make sure to reboot after the changes.
 
 Make sure to have a `.env` file in the working directory.
 
+## configure autostart
+```
+mkdir -p ~/.config/systemd/user
+nano ~/.config/systemd/user/binhy.service
+```
+```
+[Unit]
+Description=Binhy
+After=network.target
+
+[Service]
+Type=simple
+WorkingDirectory=%h/binhy
+Environment=DISPLAY=:0
+ExecStart=/usr/local/go/bin/go run .
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=default.target
+```
+```
+systemctl --user daemon-reload
+systemctl --user enable binhy.service
+systemctl --user start binhy
+loginctl enable-linger
+```
+check to see if its running:
+```
+systemctl --user status binhy
+```
+
 ## endnotes
 - Ideally the frontend should have been designed as a single file SPA so that it can be saved on the tablet and still be usable if the server is down, especially if I plan to add offline frontend functionalities such as games.
     - However I decided against that (for now), because I wanted to practice Golang and learn HTMX. I may rewrite this repo (in a different stack) in the future if I change my mind.
