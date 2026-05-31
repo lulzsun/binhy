@@ -17,14 +17,14 @@
         </a>
     </header>
     <main class="p-3 mb-3 overflow-y-auto w-full h-full border-t-2 border-black">
-        <div class="grid grid-cols-3 md:grid-cols-6 gap-3 h-screen">
+        <div class="grid grid-cols-3 md:grid-cols-6 gap-3">
             {{ range .Movies }}
                 <img class="rounded-xl cursor-pointer" hx-post="/play?file={{ .File }}" src="{{ .Thumb }}"/>
             {{ end }}
         </div>
     </main>
-    <!-- <footer class="flex-initial">
+    <footer class="flex-initial">
         <b>footer</b>
-    </footer> -->
+    </footer>
 </body>
 </html>

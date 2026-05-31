@@ -166,6 +166,11 @@ func main() {
 		rand.Shuffle(len(movies["Movies"]), func(i, j int) {
 			movies["Movies"][i], movies["Movies"][j] = movies["Movies"][j], movies["Movies"][i]
 		})
+		limit := 12
+		if len(movies["Movies"]) < limit {
+			limit = len(movies["Movies"])
+		}
+		movies["Movies"] = movies["Movies"][:limit]
 		tmpl.Execute(w, movies)
 	})
 
