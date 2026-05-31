@@ -19,7 +19,7 @@
     <main class="p-3 mb-3 overflow-y-auto w-full h-full border-t-2 border-black">
         <div class="grid grid-cols-3 md:grid-cols-6 gap-3">
             {{ range .Movies }}
-                <img class="rounded-xl cursor-pointer" hx-post="/play?file={{ .File }}?title={{ .Title }}?thumb={{ .Thumb }}" src="{{ .Thumb }}"/>
+                <img class="w-full h-full object-cover rounded-xl cursor-pointer" loading="lazy" hx-post="/play?file={{ .File }}?title={{ .Title }}?thumb={{ .Thumb }}" src="{{ .Thumb }}"/>
             {{ end }}
         </div>
     </main>

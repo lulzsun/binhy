@@ -3,6 +3,7 @@ package main
 
 import (
 	"encoding/xml"
+	"fmt"
 	"io"
 	"log"
 	"math/rand"
@@ -164,8 +165,9 @@ func main() {
 				// }
 				movies = append(movies, Movie{
 					Title: video.Title,
-					Thumb: plexUrl + video.Thumb + "?X-Plex-Token=" + plexToken,
-					File:  video.Media.Part.Key,
+					Thumb: fmt.Sprintf("%s/photo/:/transcode?width=120&height=180&minSize=1&url=%s&X-Plex-Token=%s",
+						plexUrl, video.Thumb, plexToken),
+					File: video.Media.Part.Key,
 				})
 			}
 		}
